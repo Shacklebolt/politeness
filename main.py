@@ -12,7 +12,7 @@ if __name__ == '__main__':
     np.random.seed(43)
     # hyper parameters to be tweaked here
     load_rnn_from_pickle = False
-    training_size = 200  # maximum of 2113
+    training_size = 2050  # maximum of 2113, 2050 requests when Ali ran this (September 23, 2015)
     l_rate = 0.01
     mini_batch_size = 20
     reg_cost = 0.001
@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     # load parsed trees from file in PTB format
     if load_rnn_from_pickle is False:
-        with open('WikiTreebankQuartiles.txt', 'rb') as fh:
+        with open('WikiTreebankQuartilesRefined.txt', 'rb') as fh:
             RNN = Model(dim=dim, l_rate=l_rate, mini_batch=mini_batch_size, reg_cost=reg_cost, epochs=epochs)
             all_lines = fh.readlines()
 
@@ -78,11 +78,11 @@ if __name__ == '__main__':
     RNN.request_val = indices[train:train + val]
     RNN.request_test = indices[train + val:]
     # print RNN.cross_validate()
-    #RNN.train(True)
-    RNN.check_model_veracity()
+    RNN.train(True)
+    #RNN.check_model_veracity()
     print "Test Cost Function, Accuracy, Incorrectly classified sentence Ids"
-    RNN.check_model_veracity()
-    #print RNN.test()
+    #RNN.check_model_veracity()
+    print RNN.test()
 
     hyper_params = "training_size={0}\nl_rate={1}\nmini_batch_size={2}\nreg_cost={3}\nepochs={4}\ndim={5}".format(
         training_size, l_rate, mini_batch_size, reg_cost, epochs, dim)

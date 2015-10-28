@@ -28,7 +28,7 @@ print d['the']
 print len(d)
 exit()
 '''
-
+'''
 word2vec = {}
 with open('glove-100d.txt', 'rb') as f:
     lines = f.readlines()
@@ -39,7 +39,19 @@ for line in lines:
 
 with open('treebank_vectors_100d.pickle', 'wb') as pickle_file:
     pickle.dump(word2vec, pickle_file, pickle.HIGHEST_PROTOCOL)
+'''
 
+# Checking if there are still any requests with > or < 2 sentences
+with open('WikiTreebankQuartilesRefined.txt', 'r') as fh:
+    all_lines = fh.readlines()
+    i = 0
+    while i < len(all_lines):
+        num1 = all_lines[i].split()
+        num2 = all_lines[i+1].split()        
+        if num1[0].strip() != num2[0].strip():
+            print num1[0], 'failed.'
+
+        i += 2
 
 """
 with open('treebank_scores.pickle', 'rb') as pickle_file:
