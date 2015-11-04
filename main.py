@@ -11,7 +11,7 @@ if __name__ == '__main__':
     np.random.seed(43)
     # hyper parameters to be tweaked here
     load_rnn_from_pickle = False
-    training_size = 10  # maximum of 2113
+    training_size = 2113  # maximum of 2113
     l_rate = 0.01
     mini_batch_size = 2
     reg_cost = 0.001
