@@ -54,7 +54,7 @@ class Model:
         self.activation_func = activation_func
 
         # word-embdeddings dictionary
-        file_name = 'treebank_vectors_' + str(self.dim) + 'd.pickle'
+        file_name = 'treebank_vectors_' + str(self.dim) + 'd_new.pickle'
         with open(file_name, 'rb') as pickle_file:
             Model.word_to_vec = pickle.load(pickle_file)
 
