@@ -17,6 +17,7 @@ if __name__ == '__main__':
     mini_batch_size = 20
     reg_cost = 0.001
     epochs = 100
+    activation_func = "sig"
     dim = 100
     ######################################
 
@@ -28,7 +29,7 @@ if __name__ == '__main__':
     # load parsed trees from file in PTB format
     if load_rnn_from_pickle is False:
         with open('WikiTreebankQuartilesRefined.txt', 'rb') as fh:
-            RNN = Model(dim=dim, l_rate=l_rate, mini_batch=mini_batch_size, reg_cost=reg_cost, epochs=epochs)
+            RNN = Model(dim=dim, l_rate=l_rate, mini_batch=mini_batch_size, reg_cost=reg_cost, epochs=epochs, activation_func=activation_func)
             all_lines = fh.readlines()
 
             # NOTE: There should be NO sentence with < or > 2 sentences

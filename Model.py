@@ -9,7 +9,8 @@ class Model:
     targets = None
     sent_per_req = 2
 
-    def __init__(self, dim=50, reg_cost=0.001, l_rate=0.05, mini_batch=20, epochs=100):
+    def __init__(self, dim=50, reg_cost=0.001, l_rate=0.05, mini_batch=20,
+                 epochs=100, activation_func="sig"):
         # list of requests in training set
         self.requests = []
 
@@ -50,7 +51,7 @@ class Model:
         self.dim = dim
 
         # type of activation function
-        self.activ_func = "tanh"
+        self.activation_func = activation_func
 
         # word-embdeddings dictionary
         file_name = 'treebank_vectors_' + str(self.dim) + 'd.pickle'
@@ -435,6 +436,24 @@ class Model:
         self.set_params(initial_params)
 
         return exp_grad
+
+    def activation(self, _input):
+        """
+        Computes and returns the activation function
+        """
+        if self.activation_func == "tanh":
+            return np.tanh(_input)
+        elif self.activation_func == "sig":
+            return 1. / (1 + np.exp(-_input))
+
+    def activation_derivative(self, _input):
+        """
+        Computes and returns derivative of the activation function
+        """
+        if self.activation_func == "tanh":
+            return 1. - np.square(_input)
+        elif self.activation_func == "sig":
+            return _input * (1. - _input)
 
     @staticmethod
     def get_gradients(delta_w, delta_ws):
