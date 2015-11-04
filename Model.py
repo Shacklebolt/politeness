@@ -333,17 +333,20 @@ class Model:
 
         return np.around(test_cost, 3), 1.*correct/len(self.request_test), incorrect
 
-    def check_model_veracity(self):
+    def check_model_veracity(self, num_samples=10):
         """
         Checks whether the model is correct by performing numerical gradient check.
+        Takes number of parameters to check randomly
         """
-        grad = self.sgd(self.request_train)
-        epsilon = 1e-5
         initial_params = self.get_params()
+        rand_samples = np.random.randint(0, self.param_size, num_samples)
+        grad = self.sgd(self.request_train)
+        sample_grad = grad[rand_samples].ravel()
+        epsilon = 1e-5
         num_grad = np.zeros(self.param_size)
         vector = np.zeros(initial_params.shape)
         scale = 1. / (len(self.request_train) * 2)
-        for i in range(self.param_size):
+        for i in rand_samples:
             vector[i] = epsilon
 
             self.set_params(initial_params + vector)
@@ -363,7 +366,8 @@ class Model:
 
             vector[i] = 0
 
-        print np.around(np.sum(np.abs(grad - num_grad) / np.abs(grad + num_grad)), 10)
+        num_grad = num_grad[rand_samples]
+        print np.around(np.sum(np.abs(sample_grad - num_grad) / np.abs(sample_grad + num_grad)), 10)
         self.set_params(initial_params)
 
     def scale_regularize(self, delta_w, delta_ws, scale):
