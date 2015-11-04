@@ -54,9 +54,6 @@ if __name__ == '__main__':
 
                 RNN.add_request(req)
                 i += 2
-
-        with open('rnn.pickle', 'wb') as pickle_file:
-            pickle.dump(RNN, pickle_file, pickle.HIGHEST_PROTOCOL)
     else:
         with open('rnn.pickle', 'rb') as pickle_file:
             RNN = pickle.load(pickle_file)
@@ -80,9 +77,14 @@ if __name__ == '__main__':
     RNN.request_test = indices[train + val:]
     # print RNN.cross_validate()
     RNN.train(True)
+
+    # Save the trained model
+    if load_rnn_from_pickle is False:
+        with open('rnn.pickle', 'wb') as pickle_file:
+            pickle.dump(RNN, pickle_file, pickle.HIGHEST_PROTOCOL)
+
     #RNN.check_model_veracity()
     print "Test Cost Function, Accuracy, Incorrectly classified sentence Ids"
-    #RNN.check_model_veracity()
     print RNN.test()
 
     hyper_params = "training_size={0}\nl_rate={1}\nmini_batch_size={2}\nreg_cost={3}\nepochs={4}\ndim={5}".format(
