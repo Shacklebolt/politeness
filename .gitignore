@@ -8,3 +8,4 @@ Stanford_politeness_corpus/
 glove-*.txt
 treebank_vectors_50d_all.pickle
 treebank_vectors_100d_all.pickle
+*/.DS_Store

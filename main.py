@@ -11,11 +11,12 @@ if __name__ == '__main__':
     np.random.seed(43)
     # hyper parameters to be tweaked here
     load_rnn_from_pickle = False
-    training_size = 2113  # maximum of 2113
+    training_size = 10  # maximum of 2113
     l_rate = 0.01
-    mini_batch_size = 20
+    mini_batch_size = 2
     reg_cost = 0.001
     epochs = 100
+    activation_func = "tanh"
     dim = 100
     ######################################
 
@@ -27,7 +28,8 @@ if __name__ == '__main__':
     # load parsed trees from file in PTB format
     if load_rnn_from_pickle is False:
         with open('WikiTreebankQuartiles_second.txt', 'rb') as fh:
-            RNN = Model(dim=dim, l_rate=l_rate, mini_batch=mini_batch_size, reg_cost=reg_cost, epochs=epochs)
+            RNN = Model(dim=dim, l_rate=l_rate, mini_batch=mini_batch_size, reg_cost=reg_cost,
+                        epochs=epochs, activation_func=activation_func)
 
             for i, line in enumerate(fh):
                 p = line.find(' ')
@@ -55,6 +57,6 @@ if __name__ == '__main__':
     print "Test Cost Function, Accuracy, Incorrectly classified sentence Ids"
     print RNN.test()
 
-    hyper_params = "training_size={0}\nl_rate={1}\nmini_batch_size={2}\nreg_cost={3}\nepochs={4}\ndim={5}".format(
-        training_size, l_rate, mini_batch_size, reg_cost, epochs, dim)
+    hyper_params = "training_size={0}\nl_rate={1}\nmini_batch_size={2}\nreg_cost={3}\nepochs={4}\ndim={5}\nactivation_func={6}".format(
+        training_size, l_rate, mini_batch_size, reg_cost, epochs, dim, activation_func)
     print hyper_params

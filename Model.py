@@ -8,7 +8,8 @@ class Model:
     word_to_vec = None
     targets = None
 
-    def __init__(self, dim=50, reg_cost=0.001, l_rate=0.05, mini_batch=20, epochs=100):
+    def __init__(self, dim=50, reg_cost=0.001, l_rate=0.05, mini_batch=20,
+                 epochs=100, activation_func="sig"):
         # list of trees in training set
         self.trees = []
 
@@ -49,7 +50,7 @@ class Model:
         self.dim = dim
 
         # type of activation function
-        self.activ_func = "tanh"
+        self.activation_func = activation_func
 
         # word-embdeddings dictionary
         file_name = 'treebank_vectors_' + str(self.dim) + 'd.pickle'
@@ -119,14 +120,14 @@ class Model:
             return Model.get_vec(node.word)
 
         elif node.num_child == 1:
-            return np.tanh(Model.get_vec(node.children[0].word))
+            return self.activation(Model.get_vec(node.children[0].word))
 
         elif node.num_child == 2:
             left = self.forward(node.children[0])
             right = self.forward(node.children[1])
             children = concat_with_bias(left, right)
 
-            node.vec = np.tanh(np.dot(self.w, children))
+            node.vec = self.activation(np.dot(self.w, children))
 
             return node.vec
 
@@ -158,7 +159,7 @@ class Model:
             delta_w += np.dot(delta_com, children.T)
 
             # W.T * delta_com (*) f'([x3, p1])
-            delta_down = np.multiply(np.dot(self.w.T, delta_com), tanh_derivative(children))
+            delta_down = np.multiply(np.dot(self.w.T, delta_com), self.activation_derivative(children))
 
             left_delta_down = delta_down[:self.dim]
             right_delta_down = delta_down[self.dim: 2 * self.dim]
@@ -178,7 +179,7 @@ class Model:
         # Ws.T * (y - t)
         delta = np.dot(self.ws.T, diff_class)
         # Ws.T * (y - t) * f'(p2)
-        delta_node = np.multiply(delta[:-1], tanh_derivative(tree.root.vec))
+        delta_node = np.multiply(delta[:-1], self.activation_derivative(tree.root.vec))
 
         tree.error = self.get_cost(tree)
 
@@ -191,7 +192,9 @@ class Model:
         eps = 1e-3
         params = self.get_params()
         sumGrads += (grads * grads)
+        # AdaGrad weight update equation
         params = params - (self.l_rate * grads / (np.sqrt(sumGrads) + eps))
+        # Simple weight update equation
         # params = params - (self.l_rate * grads)
         self.set_params(params)
 
@@ -299,7 +302,7 @@ class Model:
             if true_label == tree.pred_label:
                 correct += 1
             else:
-                incorrect.append(tree.id)
+                incorrect.append((tree.id, tree.pred_label))
 
         return np.around(test_cost, 3), 1.*correct/len(self.tree_test), incorrect
 
@@ -410,6 +413,24 @@ class Model:
         self.set_params(initial_params)
 
         return exp_grad
+
+    def activation(self, _input):
+        """
+        Computes and returns the activation function
+        """
+        if self.activation_func == "tanh":
+            return np.tanh(_input)
+        elif self.activation_func == "sig":
+            return 1. / (1 + np.exp(-_input))
+
+    def activation_derivative(self, _input):
+        """
+        Computes and returns derivative of the activation function
+        """
+        if self.activation_func == "tanh":
+            return 1. - np.square(_input)
+        elif self.activation_func == "sig":
+            return _input * (1. - _input)
 
     @staticmethod
     def get_gradients(delta_w, delta_ws):
