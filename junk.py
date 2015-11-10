@@ -3,6 +3,21 @@ import scipy.stats as stats
 from collections import OrderedDict
 
 
+# arr = np.array([np.zeros(shape=(5, 1)) for i in xrange(5)])
+arr = np.array(map(lambda x: np.ones(shape=(5, 1)), xrange(2)))
+print arr
+arr.fill(0)
+print arr
+# print np.reshape(arr.ravel(), (-1, 1))
+exit()
+arr = np.array([[1, 2], [3, 4]])
+print arr
+students = {'mario': arr, 'miraj': arr+1, 'raza': arr+2, 'mehvish': arr+3}
+print np.array(students.values())
+print students.keys()
+d = dict((a, i) for i, a in enumerate(students.keys()))
+print d
+exit()
 
 
 #Plots the validation errors of AdaGrad vs Simple Gradient Descent

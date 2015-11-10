@@ -23,17 +23,20 @@ class Model:
         # test set
         self.request_test = None
 
+        # train set
+        self.request_train = None
+
         # number of classes
         self.classes = 2
 
         # weight matrix for internal nodes
-        self.w = init_random_w((dim, (2*dim+1)))
+        self.w = init_random_w((dim, (2 * dim + 1)))
 
         # weight matrix for softmax prediction
-        self.ws = init_random_ws((self.classes, dim+1))
+        self.ws = init_random_ws((self.classes, dim + 1))
 
         # size of total parameters
-        self.param_size = dim * (2*dim+1) + (self.classes * (dim+1))
+        self.param_size = dim * (2 * dim + 1) + (self.classes * (dim + 1))
 
         # weight decay
         self.reg_cost = reg_cost
@@ -58,6 +61,19 @@ class Model:
         with open(file_name, 'rb') as pickle_file:
             Model.word_to_vec = pickle.load(pickle_file)
 
+        # flattened word vectors
+        self.word_to_vec_flat = np.array(Model.word_to_vec.values())
+        print "self.word_to_vec_flat", self.word_to_vec_flat
+
+        # word to index mapping dictionary
+        self.word_to_index = dict((w, i) for i, w in enumerate(Model.word_to_vec.keys()))
+        print "self.word_to_index", self.word_to_index
+
+        # flattened derivatives for word vectors
+        self.delta_d = np.array(map(lambda x: np.zeros(self.dim), xrange(self.word_to_vec_flat.shape[0])))
+        print "self.delta_d", self.delta_d
+        exit()
+
         # target value for each tree
         with open('treebank_scores.pickle', 'rb') as pickle_file:
             Model.targets = pickle.load(pickle_file)
@@ -67,7 +83,7 @@ class Model:
         Assigns new values to weights of the network
         """
         # weight matrix for internal nodes
-        self.w = init_random_w((self.dim, 2*self.dim + 1))
+        self.w = init_random_w((self.dim, 2 * self.dim + 1))
 
         # weight matrix for softmax prediction
         self.ws = init_random_ws((self.classes, self.dim + 1))
@@ -90,7 +106,6 @@ class Model:
             # Assign training and test sets
             start, stop = current, current + fold
             self.request_test = indices[start:stop]
-            self.request_train = np.concatenate((indices[:start], indices[stop:]), axis=0)
             current = stop
 
             # perform training
@@ -155,10 +170,10 @@ class Model:
         Computes derivatives for all the model parameters
         """
         if node.num_child == 0:
-            # TODO: take word vector derivatives
-            return
+            # take word vector derivatives
+            self.delta_d[self.word_to_index[node.word]] += delta_com
         elif node.num_child == 1:
-            return
+            self.delta_d[self.word_to_index[node.children[0].word]] += delta_com
         elif node.num_child == 2:
             left_vector = node.children[0].vec
             right_vector = node.children[1].vec
@@ -240,7 +255,7 @@ class Model:
         scale = 1. / (len(training_batch) * 2)
         self.scale_regularize(delta_w, delta_ws, scale)
 
-        return self.get_gradients(delta_w, delta_ws)
+        return self.get_gradients(delta_w, delta_ws, self.delta_d)`
 
     def train(self, is_val=False):
         """
@@ -253,7 +268,7 @@ class Model:
         min_cost = np.inf
         max_count = 40
         count_down = max_count
-        error_factor = 0.001
+        error_factor = 0.0001
         train_size = len(self.request_train)
         val_costs = []
 
@@ -274,6 +289,8 @@ class Model:
                 # error derivatives with respect to parameters
                 grads = self.sgd(mini_batch)
                 self.update(sumGrads, grads)
+                # flush word vector derivatives here. I think it is the most suitable place to do that
+                self.delta_d.fill(0.)
 
             sumGrads.fill(0.)
             if is_val:
@@ -331,7 +348,7 @@ class Model:
             else:
                 incorrect.append(request.id)
 
-        return np.around(test_cost, 3), 1.*correct/len(self.request_test), incorrect
+        return np.around(test_cost, 3), 1. * correct / len(self.request_test), incorrect
 
     def check_model_veracity(self, num_samples=10):
         """
@@ -379,6 +396,8 @@ class Model:
         delta_w += (self.reg_cost * self.w)
         delta_ws *= scale
         delta_ws += (self.reg_cost * self.ws)
+        self.delta_d *= scale
+        self.delta_d += (self.reg_cost * self.word_to_vec_flat)
 
     def get_cost(self, tree):
         """
@@ -401,7 +420,8 @@ class Model:
         """
         w_ = np.reshape(np.ravel(self.w), (-1, 1))
         ws_ = np.reshape(np.ravel(self.ws), (-1, 1))
-        params = np.vstack((w_, ws_))
+        w2v_flat_ = map(lambda x: np.reshape(np.ravel(self.word_to_vec_flat[x]), (-1, 1)), xrange(self.word_to_vec_flat.shape[0]))
+        params = np.vstack((w_, ws_, w2v_flat_))
 
         return params
 
@@ -409,8 +429,13 @@ class Model:
         """
         Sets all the model parameters in a one-dimensional vector
         """
-        self.w = np.reshape(new_params[:self.dim * (2*self.dim+1)], self.w.shape)
-        self.ws = np.reshape(new_params[self.dim * (2*self.dim+1):], self.ws.shape)
+        self.w = np.reshape(new_params[:self.dim * (2 * self.dim + 1)], self.w.shape)
+        self.ws = np.reshape(new_params[self.dim * (2 * self.dim + 1):], self.ws.shape)
+        d_start = self.dim * (2 * self.dim + 1) + (self.classes * self.dim + 1)
+        # self.delta_d = np.reshape(new_params[d_start:], self.delta_d.shape)
+        self.delta_d = np.array(
+            map(lambda x: np.reshape(new_params[(x*self.dim+d_start):(x*self.dim+d_start+self.dim)], self.delta_d[0]),
+                xrange(self.delta_d.shape[0])))
 
     def numerical_gradient(self, tree):
         """
@@ -460,14 +485,15 @@ class Model:
             return _input * (1. - _input)
 
     @staticmethod
-    def get_gradients(delta_w, delta_ws):
+    def get_gradients(delta_w, delta_ws, delta_d):
         """
         Concatenates the derivatives of all model parameters and returns.
         """
         deltaw_ = np.reshape(np.ravel(delta_w), (-1, 1))
         deltaws_ = np.reshape(np.ravel(delta_ws), (-1, 1))
+        delta_d_ = map(lambda x: np.reshape(np.ravel(delta_d[x]), (-1, 1)), xrange(delta_d.shape[0]))
 
-        return np.vstack((deltaw_, deltaws_))
+        return np.vstack((deltaw_, deltaws_, delta_d_))
 
     @staticmethod
     def get_vec(word):

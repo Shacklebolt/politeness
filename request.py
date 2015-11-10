@@ -3,6 +3,7 @@ from Tree import Tree
 from Model import Model
 from Node import Node
 
+
 class Request:
     def __init__(self, _id=None):
         self.id = _id

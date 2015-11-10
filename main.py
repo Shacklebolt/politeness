@@ -3,22 +3,31 @@ from request import Request
 import numpy as np
 import pickle
 
-# Note: Total sentences are 2113 in number.
+# Note: Total sentences are 2050, not 2113 in number.
 
 if __name__ == '__main__':
 
-    #####################################
     # don't change this
     np.random.seed(43)
+    #####################################
     # hyper parameters to be tweaked here
     load_rnn_from_pickle = False
+<<<<<<< Updated upstream
     training_size = 2109  # maximum of 2113, 2050 requests when Ali ran this (September 23, 2015)
     l_rate = 0.001
     mini_batch_size = 20
     reg_cost = 0.001
     epochs = 100
     activation_func = "tanh"
+=======
+    training_size = 2050  # maximum of 2050 requests when Ali ran this (September 23, 2015)
+    l_rate = 0.01
+    mini_batch_size = 20
+    reg_cost = 0.001
+    epochs = 200
+>>>>>>> Stashed changes
     dim = 100
+    activ_func = "sig"
     ######################################
 
     # perform 60-15-25 percent split into train-val-test sets
@@ -29,26 +38,27 @@ if __name__ == '__main__':
     # load parsed trees from file in PTB format
     if load_rnn_from_pickle is False:
         with open('WikiTreebankQuartilesRefined.txt', 'rb') as fh:
-            RNN = Model(dim=dim, l_rate=l_rate, mini_batch=mini_batch_size, reg_cost=reg_cost, epochs=epochs, activation_func=activation_func)
+            RNN = Model(dim=dim, l_rate=l_rate, mini_batch=mini_batch_size, reg_cost=reg_cost, epochs=epochs,
+                        activation_func=activ_func)
             all_lines = fh.readlines()
 
             # NOTE: There should be NO sentence with < or > 2 sentences
             i = 0
-            while i < len(all_lines)-1:
+            while i < len(all_lines) - 1:
                 req = Request()
 
                 # Sentence number 1
                 line = all_lines[i]
                 p = line.find(' ')
-                ptb_string = line[p+1:]
+                ptb_string = line[p + 1:]
                 rid = line[:p]
                 req.id = rid
                 req.add_tree(ptb_string, rid)
 
                 # Sentence number 2
-                line = all_lines[i+1]
+                line = all_lines[i + 1]
                 p = line.find(' ')
-                ptb_string = line[p+1:]
+                ptb_string = line[p + 1:]
                 rid = line[:p]
                 req.add_tree(ptb_string, rid)
 
@@ -77,6 +87,7 @@ if __name__ == '__main__':
     RNN.request_test = indices[train + val:]
     # print RNN.cross_validate()
     RNN.train(True)
+<<<<<<< Updated upstream
 
     # Save the trained model
     if load_rnn_from_pickle is False:
@@ -84,6 +95,9 @@ if __name__ == '__main__':
             pickle.dump(RNN, pickle_file, pickle.HIGHEST_PROTOCOL)
 
     #RNN.check_model_veracity()
+=======
+    # RNN.check_model_veracity()
+>>>>>>> Stashed changes
     print "Test Cost Function, Accuracy, Incorrectly classified sentence Ids"
     print RNN.test()
 

@@ -46,6 +46,7 @@ def init_random_ws(shape):
     matrix[:, :dim] = np.random.uniform(-r, r, (shape[0], dim))
     return matrix
 
+
 def init_random_w(shape):
     dim = shape[0]
     r = 1 / (2*np.sqrt(dim))
