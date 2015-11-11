@@ -35,9 +35,6 @@ class Model:
         # weight matrix for softmax prediction
         self.ws = init_random_ws((self.classes, dim + 1))
 
-        # size of total parameters
-        self.param_size = dim * (2 * dim + 1) + (self.classes * (dim + 1))
-
         # weight decay
         self.reg_cost = reg_cost
 
@@ -63,20 +60,19 @@ class Model:
 
         # flattened word vectors
         self.word_to_vec_flat = np.array(Model.word_to_vec.values())
-        print "self.word_to_vec_flat", self.word_to_vec_flat
 
         # word to index mapping dictionary
         self.word_to_index = dict((w, i) for i, w in enumerate(Model.word_to_vec.keys()))
-        print "self.word_to_index", self.word_to_index
 
         # flattened derivatives for word vectors
         self.delta_d = np.array(map(lambda x: np.zeros(self.dim), xrange(self.word_to_vec_flat.shape[0])))
-        print "self.delta_d", self.delta_d
-        exit()
 
         # target value for each tree
         with open('treebank_scores.pickle', 'rb') as pickle_file:
             Model.targets = pickle.load(pickle_file)
+
+        # size of total parameters
+        self.param_size = dim * (2 * dim + 1) + (self.classes * (dim + 1)) + (dim * self.delta_d.shape[0])
 
     def reset_weights(self):
         """
@@ -255,7 +251,7 @@ class Model:
         scale = 1. / (len(training_batch) * 2)
         self.scale_regularize(delta_w, delta_ws, scale)
 
-        return self.get_gradients(delta_w, delta_ws, self.delta_d)`
+        return self.get_gradients(delta_w, delta_ws, self.delta_d)
 
     def train(self, is_val=False):
         """
