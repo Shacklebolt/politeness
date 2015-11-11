@@ -65,13 +65,13 @@ class Model:
         self.word_to_index = dict((w, i) for i, w in enumerate(Model.word_to_vec.keys()))
 
         # flattened derivatives for word vectors
-        self.delta_d = np.array(map(lambda x: np.zeros(self.dim), xrange(self.word_to_vec_flat.shape[0])))
+        self.delta_d = np.array(map(lambda x: np.zeros(shape=(self.dim, 1)), xrange(self.word_to_vec_flat.shape[0])))
 
         # target value for each tree
         with open('treebank_scores.pickle', 'rb') as pickle_file:
             Model.targets = pickle.load(pickle_file)
 
-        # size of total parameters
+        # total number of parameters = sizeof(w) + sizeof(ws) + sizeof(vocab)
         self.param_size = dim * (2 * dim + 1) + (self.classes * (dim + 1)) + (dim * self.delta_d.shape[0])
 
     def reset_weights(self):
@@ -135,10 +135,10 @@ class Model:
         Runs a forward pass on the whole tree and calculates vectors at each node
         """
         if node.num_child == 0:
-            return Model.get_vec(node.word)
+            return self.get_vec(node.word)
 
         elif node.num_child == 1:
-            return np.tanh(Model.get_vec(node.children[0].word))
+            return np.tanh(self.get_vec(node.children[0].word))
 
         elif node.num_child == 2:
             left = self.forward(node.children[0])
@@ -167,9 +167,9 @@ class Model:
         """
         if node.num_child == 0:
             # take word vector derivatives
-            self.delta_d[self.word_to_index[node.word]] += delta_com
+            self.delta_d[self.get_vec_i(node.word)] += delta_com
         elif node.num_child == 1:
-            self.delta_d[self.word_to_index[node.children[0].word]] += delta_com
+            self.delta_d[self.get_vec_i(node.word)] += delta_com
         elif node.num_child == 2:
             left_vector = node.children[0].vec
             right_vector = node.children[1].vec
@@ -352,6 +352,7 @@ class Model:
         Takes number of parameters to check randomly
         """
         initial_params = self.get_params()
+        # rand_samples = np.arange(0, self.param_size)[-num_samples:]
         rand_samples = np.random.randint(0, self.param_size, num_samples)
         grad = self.sgd(self.request_train)
         sample_grad = grad[rand_samples].ravel()
@@ -407,6 +408,7 @@ class Model:
         # L2 weight decay
         cost += self.reg_cost / 2 * (np.sum(self.w * self.w))
         cost += self.reg_cost / 2 * (np.sum(self.ws * self.ws))
+        cost += self.reg_cost / 2 * (np.sum(self.word_to_vec_flat * self.word_to_vec_flat))
 
         return cost
 
@@ -416,7 +418,7 @@ class Model:
         """
         w_ = np.reshape(np.ravel(self.w), (-1, 1))
         ws_ = np.reshape(np.ravel(self.ws), (-1, 1))
-        w2v_flat_ = map(lambda x: np.reshape(np.ravel(self.word_to_vec_flat[x]), (-1, 1)), xrange(self.word_to_vec_flat.shape[0]))
+        w2v_flat_ = np.reshape(np.ravel(self.word_to_vec_flat), (-1, 1))
         params = np.vstack((w_, ws_, w2v_flat_))
 
         return params
@@ -425,13 +427,14 @@ class Model:
         """
         Sets all the model parameters in a one-dimensional vector
         """
-        self.w = np.reshape(new_params[:self.dim * (2 * self.dim + 1)], self.w.shape)
-        self.ws = np.reshape(new_params[self.dim * (2 * self.dim + 1):], self.ws.shape)
-        d_start = self.dim * (2 * self.dim + 1) + (self.classes * self.dim + 1)
-        # self.delta_d = np.reshape(new_params[d_start:], self.delta_d.shape)
-        self.delta_d = np.array(
-            map(lambda x: np.reshape(new_params[(x*self.dim+d_start):(x*self.dim+d_start+self.dim)], self.delta_d[0]),
-                xrange(self.delta_d.shape[0])))
+        ws_start = self.dim * (2 * self.dim + 1)
+        self.w = np.reshape(new_params[:ws_start], self.w.shape)
+        d_start = ws_start + (self.classes * (self.dim + 1))
+        self.ws = np.reshape(new_params[ws_start:d_start], self.ws.shape)
+        # self.word_to_vec_flat = np.reshape(new_params[d_start:], self.delta_d.shape)
+        self.word_to_vec_flat = np.array(map(
+            lambda x: np.reshape(new_params[(x * self.dim + d_start):(x * self.dim + d_start + self.dim)],
+                                 (self.delta_d[0].shape[0], 1)), xrange(self.delta_d.shape[0])))
 
     def numerical_gradient(self, tree):
         """
@@ -487,14 +490,32 @@ class Model:
         """
         deltaw_ = np.reshape(np.ravel(delta_w), (-1, 1))
         deltaws_ = np.reshape(np.ravel(delta_ws), (-1, 1))
-        delta_d_ = map(lambda x: np.reshape(np.ravel(delta_d[x]), (-1, 1)), xrange(delta_d.shape[0]))
-
+        delta_d_ = np.reshape(np.ravel(delta_d), (-1, 1))
         return np.vstack((deltaw_, deltaws_, delta_d_))
 
-    @staticmethod
-    def get_vec(word):
+    def get_vec(self, word):
         """
-        Maps word to its vector from the embedding matrix
+        Maps word to its vector from the embedding dictionary
+        """
+        if word in Model.word_to_vec:
+            return self.word_to_vec_flat[self.word_to_index[word]]
+        else:
+            return self.word_to_vec_flat[self.word_to_index['unknown']]
+
+    def get_vec_i(self, word):
+        """
+        Maps words to the indices of their vector sin the flat embedding dictionary
+        """
+        if word in Model.word_to_vec:
+            return self.word_to_index[word]
+        else:
+            return self.word_to_index['unknown']
+
+
+    @staticmethod
+    def get_original_vec(word):
+        """
+        Maps word to its vector from the embedding dictionary
         """
         if word in Model.word_to_vec:
             return Model.word_to_vec[word]

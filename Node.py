@@ -2,7 +2,7 @@
 import numpy as np
 
 
-class Node():
+class Node:
 
     def __init__(self, vec=None):
         self.vec = vec
@@ -61,7 +61,7 @@ class Node():
                     from Model import Model
                     # Get vector for this word
                     self.word = word
-                    self.vec = Model.get_vec(word)
+                    self.vec = Model.get_original_vec(word)
 
                 assert num_children == 2 or num_children == 0
                 # Otherwise, something is wrong

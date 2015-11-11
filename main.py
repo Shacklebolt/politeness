@@ -12,20 +12,11 @@ if __name__ == '__main__':
     #####################################
     # hyper parameters to be tweaked here
     load_rnn_from_pickle = False
-<<<<<<< Updated upstream
-    training_size = 2109  # maximum of 2113, 2050 requests when Ali ran this (September 23, 2015)
+    training_size = 2050  # maximum of 2113, 2050 requests when Ali ran this (September 23, 2015)
     l_rate = 0.001
     mini_batch_size = 20
     reg_cost = 0.001
     epochs = 100
-    activation_func = "tanh"
-=======
-    training_size = 2050  # maximum of 2050 requests when Ali ran this (September 23, 2015)
-    l_rate = 0.01
-    mini_batch_size = 20
-    reg_cost = 0.001
-    epochs = 200
->>>>>>> Stashed changes
     dim = 100
     activ_func = "sig"
     ######################################
@@ -87,17 +78,12 @@ if __name__ == '__main__':
     RNN.request_test = indices[train + val:]
     # print RNN.cross_validate()
     RNN.train(True)
-<<<<<<< Updated upstream
+    # # Save the trained model
+    # if load_rnn_from_pickle is False:
+    #     with open('rnn.pickle', 'wb') as pickle_file:
+    #         pickle.dump(RNN, pickle_file, pickle.HIGHEST_PROTOCOL)
 
-    # Save the trained model
-    if load_rnn_from_pickle is False:
-        with open('rnn.pickle', 'wb') as pickle_file:
-            pickle.dump(RNN, pickle_file, pickle.HIGHEST_PROTOCOL)
-
-    #RNN.check_model_veracity()
-=======
     # RNN.check_model_veracity()
->>>>>>> Stashed changes
     print "Test Cost Function, Accuracy, Incorrectly classified sentence Ids"
     print RNN.test()
 
