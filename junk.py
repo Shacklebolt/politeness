@@ -1,7 +1,17 @@
 import numpy as np
+import pickle
+from utilities import init_random
 import scipy.stats as stats
 from collections import OrderedDict
 
+
+with open("words.txt", "rb") as f:
+    words = [word.strip() for word in f]
+
+word_to_vec = dict((w, init_random(0.0001, (100, 1))) for w in words)
+with open("random_vecs_100d.pickle", "wb") as pickleFile:
+    pickle.dump(word_to_vec, pickleFile, pickle.HIGHEST_PROTOCOL)
+exit()
 
 # arr = np.array([np.zeros(shape=(5, 1)) for i in xrange(5)])
 arr = np.array(map(lambda x: np.ones(shape=(5, 1)), xrange(2)))

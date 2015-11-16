@@ -12,11 +12,11 @@ if __name__ == '__main__':
     #####################################
     # hyper parameters to be tweaked here
     load_rnn_from_pickle = False
-    training_size = 2050  # maximum of 2113, 2050 requests when Ali ran this (September 23, 2015)
+    training_size = 2109  # maximum of 2113, 2050 requests when Ali ran this (September 23, 2015)
     l_rate = 0.001
     mini_batch_size = 20
     reg_cost = 0.001
-    epochs = 100
+    epochs = 300
     dim = 100
     activ_func = "sig"
     ######################################
@@ -58,7 +58,6 @@ if __name__ == '__main__':
     else:
         with open('rnn.pickle', 'rb') as pickle_file:
             RNN = pickle.load(pickle_file)
-
     # Just debugging
     '''
     RNN = Model(dim=dim, l_rate=l_rate, mini_batch=1, reg_cost=reg_cost, epochs=epochs)

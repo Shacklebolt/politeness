@@ -53,8 +53,9 @@ class Model:
         # type of activation function
         self.activation_func = activation_func
 
-        # word-embdeddings dictionary
-        file_name = 'treebank_vectors_' + str(self.dim) + 'd_new.pickle'
+        # word-embeddings dictionary
+        file_name = "random_vecs_{0}d.pickle".format(self.dim)
+        # file_name = 'treebank_vectors_{0}d_new.pickle'.format(self.dim)
         with open(file_name, 'rb') as pickle_file:
             Model.word_to_vec = pickle.load(pickle_file)
 
@@ -65,7 +66,7 @@ class Model:
         self.word_to_index = dict((w, i) for i, w in enumerate(Model.word_to_vec.keys()))
 
         # flattened derivatives for word vectors
-        self.delta_d = np.array(map(lambda x: np.zeros(shape=(self.dim, 1)), xrange(self.word_to_vec_flat.shape[0])))
+        self.delta_d = np.array([np.zeros(shape=(self.dim, 1)) for _ in xrange(self.word_to_vec_flat.shape[0])])
 
         # target value for each tree
         with open('treebank_scores.pickle', 'rb') as pickle_file:
@@ -262,7 +263,7 @@ class Model:
         """
         # early stopping parameters
         min_cost = np.inf
-        max_count = 40
+        max_count = 100
         count_down = max_count
         error_factor = 0.0001
         train_size = len(self.request_train)
@@ -510,7 +511,6 @@ class Model:
             return self.word_to_index[word]
         else:
             return self.word_to_index['unknown']
-
 
     @staticmethod
     def get_original_vec(word):

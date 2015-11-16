@@ -35,8 +35,8 @@ def concat(*vectors):
     return np.vstack(vectors)
 
 
-def init_random(mean, var, shape):
-    return np.random.normal(mean, var, size=shape)
+def init_random(r, size):
+    return np.random.uniform(-r, r, size=size)
 
 
 def init_random_ws(shape):
