@@ -12,7 +12,7 @@ if __name__ == '__main__':
     #####################################
     # hyper parameters to be tweaked here
     load_rnn_from_pickle = False
-    training_size = 2109  # maximum of 2113, 2050 requests when Ali ran this (September 23, 2015)
+    training_size = 50  # maximum of 2113, 2050 requests when Ali ran this (September 23, 2015)
     l_rate = 0.001
     mini_batch_size = 20
     reg_cost = 0.001
